@@ -6,346 +6,413 @@
 #include "Rule.h"
 #include "macro.h"
 #include "GamePlay.h"
-#include "tenhou.h"
 #include "Encoding/TrainingDataEncodingV1.h"
 #include "Encoding/TrainingDataEncodingV2.h"
+#include <boost/asio.hpp>
+#include <thread>
+#include <set>
 
+using boost::asio::ip::tcp;
 using namespace std;
 using_mahjong;
 
-void test_tenhou_yama() {
-	// void tenhou_yama_from_seed(char *MTseed_b64, BYTE yama[136]);
-	const char* mtseed = "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";
-	auto tenhou = TenhouShuffle::instance();
-	tenhou.init(mtseed);
-	vector<int> yama = tenhou.generate_yama();
-	vector<int> check = {22,91,36,115,56,19,60,16,124,35,59,43,107,9,5,11,57,73,18,41,42,20,25,30,103,100,126,130,77,109,17,15,67,46,72,65,131,118,102,61,113,123,89,122,92,3,129,81,97,28,24,76,37,69,31,26,66,78,51,54,112,64,94,38,88,128,13,133,87,21,27,114,105,50,10,29,1,4,48,70,32,14,86,33,23,84,93,12,117,47,75,96,44,111,95,62,74,39,116,63,53,6,2,58,79,71,108,68,121,8,49,55,34,135,82,125,90,98,83,45,132,106,0,101,134,40,7,85,110,99,52,80,120,104,119,127};
-	printf("\n--generate--\n");
-	for (int i = 0; i < 136; ++i) {
-		if (i != 0) printf(",");
-		printf("%d", yama[i]);
-	}
-	printf("\n--standard--\n");
-	bool match = true;
-	for (int i = 0; i < 136; ++i) {
-		if (i != 0) printf(",");
-		printf("%d", check[i]);
-		if (check[i] != yama[i])
-			match = false;
-	}
-	printf("\n");
-	if (match) printf("Correct!\n");
-	else printf("Incorrect!\n");
-}
+random_device rd;
+mt19937 gen(rd());
+int max_wind = 2, max_oya = 4;
+map<int, shared_ptr<tcp::socket>> clients,clients_selection;
 
-void test_tenhou_game()
+void server(boost::asio::io_service& io_service, int port)
 {
-	Table table;
-	try{
-		table.game_init_for_replay({ 68,61,62,12,107,93,65,36,121,8,79,118,19,3,59,106,84,85,38,0,51,86,16,102,122,124,82,135,128,78,56,22,69,30,47,94,113,48,134,66,27,23,54,132,114,133,64,112,40,57,125,115,55,83,37,126,70,75,21,50,96,10,11,119,52,110,33,131,95,109,29,111,92,58,41,7,31,98,88,120,28,127,53,97,90,108,44,99,74,15,117,105,101,87,35,32,17,81,25,45,72,49,130,26,13,63,20,60,9,80,18,34,77,39,116,2,104,6,76,42,129,4,5,14,73,100,103,71,46,123,43,89,91,67,24,1 }, { 25000,25000,25000,25000 }, 0, 0, 0, 0);
-		table.make_selection(12);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(13);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(5);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(12);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(12);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(13);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(13);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(10);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(13);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(13);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(12);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(8);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(13);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(13);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(13);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(9);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(13);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(5);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(8);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(7);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(12);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(13);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(3);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(7);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(10);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(13);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(16);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(2);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(8);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(12);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(0);
-		table.make_selection(9);
-		table.make_selection(0);
-		table.make_selection(1);
-		table.make_selection(0);
-		table.make_selection(0);
-
-		fmt::print("{}", table.to_string());
-		fmt::print("Self Actions:\n");
-		for (auto& action : table.get_self_actions())
-		{
-			fmt::print("{}\n", action.to_string());
-		}
-		for (auto& action : table.get_response_actions())
-		{
-			fmt::print("{}\n", action.to_string());
-		}
-		cout << table.get_phase() << endl;
-		// exit(0);
-		table.make_selection(0);
-	}
-	catch (std::exception& e)
+	tcp::acceptor acceptor(io_service, tcp::endpoint(tcp::v4(), port));
+	fmt::print("Waiting for players to join.\n");
+	clients.clear();
+	clients_selection.clear();
+	int client_count = 0;
+	vector<int> client_id={0, 1, 2, 3};
+	shuffle(client_id.begin(), client_id.end(), gen);
+	while(client_count < 4)
 	{
-		fmt::print(e.what());
-		fmt::print("{}", table.to_string());
-		fmt::print("Self Actions:\n");
-		for (auto& action : table.get_self_actions())
+		auto socket = make_shared<tcp::socket>(io_service);
+		acceptor.accept(*socket);
+		int id=client_id[client_count++];
+		clients[id]=socket;
+		boost::asio::write(*socket, boost::asio::buffer(to_string(id)));
+		fmt::print("Player {} connected.\n",id);
+		auto selection_socket = make_shared<tcp::socket>(io_service);
+		acceptor.accept(*selection_socket);
+		clients_selection[id]=selection_socket;
+		fmt::print("Selection channel for player {} established.\n",id);
+	}
+	fmt::print("All players connected.\n");
+}
+
+void client(boost::asio::io_service& io_service, const string& host, const string& port, bool is_server)
+{
+	tcp::resolver resolver(io_service);
+	auto endpoints = resolver.resolve(tcp::resolver::query(host, port));
+	auto socket = make_shared<tcp::socket>(io_service);
+	boost::asio::connect(*socket, endpoints);
+	fmt::print("Connected to server.\n");
+	auto selection_socket = make_shared<tcp::socket>(io_service);
+	boost::asio::connect(*selection_socket, endpoints);
+	fmt::print("Selection channel established.\n");
+	int player_id=0;
+	{
+		char data[1024];
+		boost::system::error_code error;
+		size_t length = socket->read_some(boost::asio::buffer(data), error);
+		if(error == boost::asio::error::eof)
+			return;
+		else if(error)
+			throw boost::system::system_error(error);
+		fmt::print("You are player {}.\n",string(data,length));
+		player_id=string(data,length)[0] - '0';
+	}
+	if(is_server)
+	{
+		thread([socket, selection_socket, player_id]() {
+			try{
+				while(true)
+				{
+					char data[1024];
+					boost::system::error_code error;
+					size_t length = socket->read_some(boost::asio::buffer(data), error);
+					if(!length)
+						continue;
+					else if(error == boost::asio::error::eof)
+						break;
+					else if(error)
+						throw boost::system::system_error(error);
+					system("cls");
+					fmt::print("{}\n",string(data, length));
+					if(string(data, length) == "Game Ends.")
+						break;
+					if(string(data, length).find("Action") != string::npos)
+					{
+						fmt::print("Enter action number:\n");
+						string selection;
+						cin >> selection;
+						boost::asio::write(*selection_socket, boost::asio::buffer(selection));
+					}
+					if(string(data, length).find("anything") != string::npos)
+					{
+						string anything;
+						cin >> anything;
+						boost::asio::write(*selection_socket, boost::asio::buffer(anything));
+					}
+				}
+			} catch(const exception& e) {
+				fmt::print("Exception in client receiver: {}\n",e.what());
+			}
+		}).detach();
+	}
+	else
+	{
+		thread([socket, selection_socket, player_id]() {
+			try{
+				while(true)
+				{
+					char data[1024];
+					boost::system::error_code error;
+					size_t length = socket->read_some(boost::asio::buffer(data), error);
+					if(!length)
+						continue;
+					else if(error == boost::asio::error::eof)
+						break;
+					else if(error)
+						throw boost::system::system_error(error);
+					system("cls");
+					fmt::print("{}\n",string(data, length));
+					if(string(data, length) == "Game Ends.")
+						break;
+					if(string(data, length).find("Action") != string::npos)
+					{
+						fmt::print("Enter action number:\n");
+						string selection;
+						cin >> selection;
+						// fmt::print("Gonna write selection.\n");
+						boost::asio::write(*selection_socket, boost::asio::buffer(selection));
+						// fmt::print("Selection written.\n");
+					}
+					if(string(data, length).find("anything") != string::npos)
+					{
+						string anything;
+						cin >> anything;
+						boost::asio::write(*selection_socket, boost::asio::buffer(anything));
+					}
+				}
+			} catch(const exception& e) {
+				fmt::print("Exception in client receiver: {}\n",e.what());
+			}
+		}).join();
+	}
+}
+
+void start_game()
+{
+	Result result;
+	bool is_first = true;
+	for (int wind = 0; wind < max_wind + (is_first ? 0 : *max_element(result.score.begin(), result.score.end()) < 30000); wind++)
+		for(int oya = 0; oya < max_oya + (max_oya == 1 && *max_element(result.score.begin(), result.score.end()) < 30000 ? 4 : 0); oya++)
 		{
-			fmt::print("{}\n", action.to_string());
+			while((wind < max_wind && oya < max_oya) || *max_element(result.score.begin(),result.score.end()) < 30000)
+			{
+				Table t;
+				if (is_first)
+				{
+					t.game_init();
+					is_first = false;
+				}
+				else
+					t.game_init_with_config({}, vector<int>(result.score.begin(),result.score.end()), result.n_riichibo, result.n_honba, wind, oya);
+				try
+				{
+					string message[4];
+					while(!t.is_over())
+					{
+						for(int player = 0; player < 4; player++)
+							message[player] = t.to_string(player) + "\n" + to_string(t.who_make_selection()) + " is making selection.\n";
+						if (t.get_phase() < 4)
+						{
+							message[t.who_make_selection()] += "SelfAction phase.\n";
+							auto actions = t.get_self_actions();
+							int index = 0, real_index = 0;
+							set<string> action_set;
+							map<int, int> index_map;
+							for (auto &action : actions)
+							{
+								string action_str = action.to_string() + (t.check_from_hand(action) ? "" : "*");
+								index_map[index += (!action_set.count(action_str))] = real_index++;
+								if (!action_set.count(action_str))
+								{
+									action_set.insert(action_str);
+									message[t.who_make_selection()] += to_string(index) + ". " + action_str + "\n";
+								}
+							}
+							for(int player = 0; player < 4; player++)
+								boost::asio::write(*clients[player], boost::asio::buffer(message[player]));
+							int selection = 1;
+							try{
+								while(true)
+								{
+									char data[1024];
+									boost::system::error_code error;
+									size_t length = clients_selection[t.who_make_selection()]->read_some(boost::asio::buffer(data), error);
+									if(!length)
+										continue;
+									else if(error == boost::asio::error::eof)
+										break;
+									else if(error)
+										throw boost::system::system_error(error);
+									selection = 0;
+									for(int i = 0; i < length; i++)
+										selection = selection * 10 + data[i] - '0';
+									break;
+								}
+							} catch(const exception& e) {
+								fmt::print("Exception in selection receiver: {}\n",e.what());
+							}
+							t.make_selection(index_map[selection]);
+						}
+						else
+						{
+							message[t.who_make_selection()] += "Response Action phase.\n";
+							auto actions = t.get_response_actions();
+							if(actions.size() == 1)
+							{
+								t.make_selection(0);
+								continue;
+							}
+							int index = 0, real_index = 0;
+							set<string> action_set;
+							map<int, int> index_map;
+							for (auto &action : actions)
+							{
+								string action_str = action.to_string();
+								index_map[index += (!action_set.count(action_str))] = real_index++;
+								if(!action_set.count(action_str))
+								{
+									action_set.insert(action_str);
+									message[t.who_make_selection()] += to_string(index) + ". " + action_str + "\n";
+								}
+							}
+							for(int player = 0; player < 4; player++)
+								boost::asio::write(*clients[player], boost::asio::buffer(message[player]));
+							int selection = 1;
+							try{
+								while(true)
+								{
+									char data[1024];
+									boost::system::error_code error;
+									size_t length = clients_selection[t.who_make_selection()]->read_some(boost::asio::buffer(data), error);
+									if(!length)
+										continue;
+									else if(error == boost::asio::error::eof)
+										break;
+									else if(error)
+										throw boost::system::system_error(error);
+									selection = 0;
+									for(int i = 0; i < length; i++)
+										selection = selection * 10 + data[i] - '0';
+									break;
+								}
+							} catch(const exception& e) {
+								fmt::print("Exception in selection receiver: {}\n",e.what());
+							}
+							t.make_selection(index_map[selection]);
+						}
+					}
+					for(int player = 0; player < 4; player++)
+						message[player] = "Result: \n" + t.get_result().to_string() + "\n" + "Type anything to continue.\n";
+					for(int player = 0; player < 4; player++)
+						boost::asio::write(*clients[player], boost::asio::buffer(message[player]));
+					for(int player = 0; player < 4; player++)
+						try{
+							while(true)
+							{
+								char data[1024];
+								boost::system::error_code error;
+								size_t length = clients_selection[player]->read_some(boost::asio::buffer(data), error);
+								if(!length)
+									continue;
+								else if(error == boost::asio::error::eof)
+									break;
+								else if(error)
+									throw boost::system::system_error(error);
+								break;
+							}
+						} catch(const exception& e) {
+							fmt::print("Exception in selection receiver: {}\n",e.what());
+						}
+					result = t.get_result();
+				} catch(const exception& e) {
+					fmt::print("Exception in client receiver: {}\n",e.what());
+				}
+				if(!result.renchan) break;
+			}
+		}
+}
+
+void create_room()
+{
+	fmt::print("Please input the game length.\n");
+	fmt::print("1. Topparai.\n");
+	fmt::print("2. Tompuuso.\n");
+	fmt::print("3. Hanchan.\n");
+	fmt::print("4. Iichan.\n\n");
+	string game_length;
+	cin >> game_length;
+	while (game_length != "1" && game_length != "2" && game_length != "3" && game_length != "4")
+	{
+		fmt::print("Invalid input! Please try again.\n");
+		cin >> game_length;
+	}
+	if (game_length == "1")
+		max_wind = 1, max_oya = 1;
+	if (game_length == "2")
+		max_wind = 1, max_oya = 4;
+	if (game_length == "3")
+		max_wind = 2, max_oya = 4;
+	if (game_length == "4")
+		max_wind = 4, max_oya = 4;
+	boost::asio::io_service io_service;
+	uniform_int_distribution<> dist(10000, 60000);
+	int port;
+	bool port_available = false;
+	while (!port_available)
+	{
+		port=dist(gen);
+		fmt::print("Trying to create room on port {}.\n",port);
+		try
+		{
+			thread server_thread([&io_service, port]() {
+				server(io_service, port);
+			});
+			fmt::print("Successfully created room on port {}.\n",port);
+			client(io_service, "127.0.0.1", to_string(port), true);
+			port_available = true;
+			server_thread.join();
+		}
+		catch(const exception& e)
+		{
+			fmt::print("Port {} is unavailable: {}. Trying another port.\n",port,e.what());
+		}
+	}
+	start_game();
+}
+
+void join_room()
+{
+	boost::asio::io_service io_service;
+	string host, port;
+	fmt::print("Enter host:\n");
+	cin >> host;
+	fmt::print("Enter port:\n");
+	cin >> port;
+	client(io_service, host, port, false);
+}
+
+void start_ui()
+{
+	fmt::print("Welcome to USTC Tenhou!\n");
+	while (true)
+	{
+		fmt::print("Type 'h' or 'help' to see the rules and instructions of the game.\n");
+		fmt::print("Type 'i' or 'info' to see the information about the project.\n");
+		fmt::print("Type '1' or 'c' or 'create' to create a room for playing.\n");
+		fmt::print("Type '2' or 'j' or 'join' to join a room for playing.\n");
+		fmt::print("Type '3' or 'q' or 'quit' to quit the game.\n\n");
+		string input;
+		cin >> input;
+		while(input != "h" && input != "help" && input != "i" && input != "info" && input != "1"
+		&& input != "c" && input != "create" && input != "2" && input != "j" && input != "join"
+		&& input != "3" && input != "q" && input != "quit")
+		{
+			fmt::print("Invalid input! Please try again.\n");
+			cin >> input;
+		}
+		if(input == "h" || input == "help")
+		{
+			fmt::print("This mahjong game is a simulation of four-player Tenhou.\n");
+			fmt::print("You can check out the game rules of Tenhou at https://zh.wikipedia.org/wiki/日本麻雀 and https://zh.wikipedia.org/wiki/天鳳_(麻將).\n");
+			fmt::print("In this USTC version of Tenhou, three new yakumans are added.\n");
+			fmt::print("1. 红专并进 (Daredbrick) Double Yakuman: Agari with four koutsu or kantsu of 5m, 5p, 5s, 7z. For 5m, 5p, 5s, you also need to have the red dora.\n");
+			fmt::print("2. 又红又专 (Xiaoredbrick) Yakuman: Agari with a koutsu or kantsu in Daredbrick substituted by toitsu. For 5m, 5p, 5s, you still need to have the red dora.\n");
+			fmt::print("3. 理实交融 (Basicalgebra) Yakuman: Agari with four koutsu or kantsu of kazupai containing 1, 9, 5, 8. For example, 1s koutsu, 9m kantsu, 5p koutsu, 8p koutsu.\n");
+			fmt::print("In order to read the Tile River, you need to know the following numbers and symbols after the tile:\n");
+			fmt::print("The number is the order number of this tile in the river.\n");
+			fmt::print("1. h It means the tile is discarded from hand. If not shown, the tile is discarded from tsumo.\n");
+			fmt::print("2. r It means the tile is the riichi tile.\n");
+			fmt::print("3. - It means someone Chi, Pon, or Kan the tile. The tile is actually not in the river.\n");
+			fmt::print("In order to discard tiles more precisely, you need to know that the '*' after the tile means the tile is from tsumo.\n");
+			fmt::print("That is all you need to know. Enjoy the game!\n\n");
+		}
+		else if(input == "i" || input == "info")
+		{
+			fmt::print("This project is based on https://github.com/Agony5757/mahjong.\n");
+			fmt::print("This project also uses fmt, boost/asio, CMake, git, and other tools.\n");
+			fmt::print("Thanks for the help from Dongqi Han (MSRA, OIST, USTC), Agony (USTC), and other contributors of https://github.com/Agony5757/mahjong.\n");
+			fmt::print("This project is developed by Tianhao Jin and Hongxi Zou from USTC.\n");
+			fmt::print("If you meet any problems or want to contribute to this project, contact us through QQ: 2328036454 or Email: jintianhao@ustc.edu.cn.\n");
+			fmt::print("Thank you for playing this game!\n\n");
+		}
+		else if(input == "3" || input == "q" || input == "quit")
+		{
+			fmt::print("See you next time.\n");
+			return;
+		}
+		else if(input == "1" || input == "c" || input == "create")
+		{
+			create_room();
+		}
+		else if(input == "2" || input == "j" || input == "join")
+		{
+			join_room();
 		}
 	}
 }
 
-void test_random_play(int games = 10)
-{
-	namespace enc = TrainingDataEncoding::v1;
-
-	std::default_random_engine reng;
-	reng.seed(time(nullptr));
-	std::uniform_real_distribution<float> ud(0, 1);
-
-	static auto random_action = [&reng, &ud](auto actions) {
-		return size_t(ud(reng) * actions.size());
-	};
-	timer t;
-	
-	for (int i = 0; i < games; ++i) {
-		Table t;
-		t.set_debug_mode(Table::debug_close);
-		t.game_init();
-		std::array<enc::dtype, enc::n_row * enc::n_col> mat_buffer;
-		std::array<enc::dtype, enc::n_row * enc::n_col> mat_oracle_buffer;
-		std::array<enc::dtype, enc::n_actions> vec_buffer;
-
-		do {
-			mat_buffer.fill(0);
-			mat_oracle_buffer.fill(0);
-			vec_buffer.fill(0);
-			enc::encode_table(t, t.who_make_selection(), false, mat_buffer.data());
-			enc::encode_table(t, t.who_make_selection(), true, mat_oracle_buffer.data());
-			enc::encode_actions_vector(t, t.who_make_selection(), vec_buffer.data());
-
-			int selection;
-			if (t.is_self_acting()) {
-				auto actions = t.get_self_actions();
-				selection = random_action(actions);
-			}
-			else {
-				auto actions = t.get_response_actions();
-				selection = random_action(actions);
-			}
-			t.make_selection(selection);
-		} while (!t.is_over());
-	}
-	double time = t.get(sec);
-	fmt::print("{} random plays passed, duration = {:3f} s ({:3f} s avg.)", games, time, time / games);
-	fmt::print("{}", profiler::get_all_profiles_v2());
-}
-
-void test_random_play_v2(int games = 1000)
-{
-	namespace enc = TrainingDataEncoding::v2;
-
-	std::default_random_engine reng;
-	reng.seed(time(nullptr));
-	std::uniform_real_distribution<float> ud(0, 1);
-
-	static auto random_action = [&reng, &ud](auto actions) {
-		return size_t(ud(reng) * actions.size());
-	};
-	timer t;
-
-	for (int i = 0; i < games; ++i) {
-		fmt::print("Game {} / {}\n", i + 1, games);
-		Table t;
-		enc::TableEncoder encoder(&t);
-		t.set_debug_mode(Table::debug_close);
-		t.game_init();
-		encoder.init();
-		encoder.update();
-		/*fmt::print("{}\n", encoder.self_infos[0]);
-		fmt::print("{}\n", encoder.self_infos[1]);
-		fmt::print("{}\n", encoder.self_infos[2]);
-		fmt::print("{}\n", encoder.self_infos[3]);*/
-		do {
-			int selection;
-			if (t.is_self_acting()) {
-				auto actions = t.get_self_actions();
-				selection = random_action(actions);
-			}
-			else {
-				auto actions = t.get_response_actions();
-				selection = random_action(actions);
-			}
-			t.make_selection(selection);
-			if (!t.is_over())
-				encoder.update();
-		} while (!t.is_over());
-		//fmt::print(
-		//	"------ Game Log ------\n"
-		//	"{}\n"
-		//	"---- Game Log (end) ----", t.gamelog.to_string());
-	}
-	
-	double time = t.get(sec);
-	fmt::print("{} random plays passed, duration = {:3f} s ({:3f} s avg.)", games, time, time / games);
-	fmt::print("{}", profiler::get_all_profiles_v2());
-}
-
-int main() {	
-	// test_random_play();
-	// test_tenhou_yama();
-	// test_tenhou_game();
-	test_random_play_v2();
-	getchar();
+int main() {
+	start_ui();
 	return 0;
 }

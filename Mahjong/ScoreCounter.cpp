@@ -423,7 +423,80 @@ vector<Yaku> ScoreCounter::get_hand_yakuman(const vector<string> &tile_group_str
 		return pure_green_str(s);
 		});
 
+	bool have_0m = false, have_0p = false, have_0s = false;
+	for (auto tile : tiles)
+		if (tile->red_dora)
+			have_0m |= tile->tile == _5m,
+			have_0p |= tile->tile == _5p,
+			have_0s |= tile->tile == _5s;
+	for (auto fulu : player->call_groups)
+		for (auto tile : fulu.tiles)
+			if (tile->red_dora)
+				have_0m |= tile->tile == _5m,
+				have_0p |= tile->tile == _5p,
+				have_0s |= tile->tile == _5s;
+	bool koutsu_5m = false, koutsu_5p = false, koutsu_5s = false, koutsu_7z = false;
+	bool toitsu_5m = false, toitsu_5p = false, toitsu_5s = false, toitsu_7z = false;
+	for_each(tile_group_string.begin(), tile_group_string.end(), [&koutsu_5m, &koutsu_5p,
+	&koutsu_5s, &koutsu_7z, &toitsu_5m, &toitsu_5p, &toitsu_5s, &toitsu_7z](const string &s) {
+		if(s[2] == 'K' || s[2] == '|')
+		{
+			koutsu_5m |= s[0] == '5' && s[1] == 'm';
+			koutsu_5p |= s[0] == '5' && s[1] == 'p';
+			koutsu_5s |= s[0] == '5' && s[1] == 's';
+			koutsu_7z |= s[0] == '7' && s[1] == 'z';
+		}
+		if(s[2] == ':')
+		{
+			toitsu_5m |= s[0] == '5' && s[1] == 'm';
+			toitsu_5p |= s[0] == '5' && s[1] == 'p';
+			toitsu_5s |= s[0] == '5' && s[1] == 's';
+			toitsu_7z |= s[0] == '7' && s[1] == 'z';
+		}
+	});
+	bool koutsu_0m = have_0m && koutsu_5m, toitsu_0m = have_0m && toitsu_5m;
+	bool koutsu_0p = have_0p && koutsu_5p, toitsu_0p = have_0p && toitsu_5p;
+	bool koutsu_0s = have_0s && koutsu_5s, toitsu_0s = have_0s && toitsu_5s;
+	bool koutsu_1 = false, koutsu_9 = false, koutsu_5 = false, koutsu_8 = false;
+	for_each(tile_group_string.begin(), tile_group_string.end(), [&koutsu_1, &koutsu_9,
+	&koutsu_5, &koutsu_8](const string &s) {
+		if ((s[2] == 'K' || s[2] == '|') && s[1] != 'z')
+		{
+			koutsu_1 |= s[0] == '1';
+			koutsu_9 |= s[0] == '9';
+			koutsu_5 |= s[0] == '5';
+			koutsu_8 |= s[0] == '8';
+		}
+	});
 	/* 开始判定 */
+
+	if(koutsu_0m && koutsu_0p && koutsu_0s && koutsu_7z) {
+		yakus.push_back(Yaku::Daredbrick);
+		yakuman = true;
+	}
+	else {
+		if(toitsu_0m && koutsu_0p && koutsu_0s && koutsu_7z) {
+			yakus.push_back(Yaku::Xiaoredbrick);
+			yakuman = true;
+		}
+		if(koutsu_0m && toitsu_0p && koutsu_0s && koutsu_7z) {
+			yakus.push_back(Yaku::Xiaoredbrick);
+			yakuman = true;
+		}
+		if(koutsu_0m && koutsu_0p && toitsu_0s && koutsu_7z) {
+			yakus.push_back(Yaku::Xiaoredbrick);
+			yakuman = true;
+		}
+		if(koutsu_0m && koutsu_0p && koutsu_0s && toitsu_7z) {
+			yakus.push_back(Yaku::Xiaoredbrick);
+			yakuman = true;
+		}
+	}
+
+	if(koutsu_1 && koutsu_9 && koutsu_5 && koutsu_8) {
+		yakus.push_back(Yaku::Basicalgebra);
+		yakuman = true;
+	}
 
 	if (z_pure_type) {
 		yakus.push_back(Yaku::Tsuiisou);

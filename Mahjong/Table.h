@@ -57,6 +57,8 @@ public:
 public:
 	Table() = default;
 
+	bool check_from_hand(Action action);
+
 	void new_dora();
 	std::vector<BaseTile> get_dora() const;
 	std::vector<BaseTile> get_ura_dora() const;
@@ -157,7 +159,7 @@ public:
 			fmt::print("table.make_selection({})", selection);
 	}
 
-	std::string to_string() const;
+	std::string to_string(int player) const;
 
 	inline bool after_chipon() { return last_action == BaseAction::Chi || last_action == BaseAction::Pon; }
 	inline bool after_daiminkan() {	return last_action == BaseAction::Kan; }

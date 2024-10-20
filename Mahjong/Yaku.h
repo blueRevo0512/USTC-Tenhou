@@ -89,9 +89,12 @@ enum class Yaku {
 	Shousuushi,
 	Siikantsu,
 	Chuurenpoutou,
+	Xiaoredbrick,
+	Basicalgebra,
 
 	Yakuman,
 
+	Daredbrick,
 	Siiankou_1,
 	Koukushimusou_13,
 	Chuurenpoutou_9,
@@ -192,9 +195,12 @@ inline std::string yaku_to_string(Yaku yaku) {
 		"小四喜",
 		"四杠子",
 		"九莲宝灯",
+		"又红又专",
+		"理实交融",
 
 		"役满",
 
+		"红专并进",
 		"四暗刻单骑",
 		"国士无双十三面",
 		"纯正九莲宝灯",

@@ -107,7 +107,7 @@ public:
 	inline River get_river() { return river; }
 	std::string hand_to_string() const;
 	std::string river_to_string() const;
-	std::string to_string() const;
+	std::string to_string(bool is_self) const;
 	std::string tenpai_to_string() const;
 
 	void update_atari_tiles();

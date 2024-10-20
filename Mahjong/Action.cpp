@@ -52,7 +52,7 @@ string Action::to_string() const
 	case BaseAction::Discard:
 		return "Discard " + correspond_tiles[0]->to_string();
 	case BaseAction::Riichi:
-		return "Riichi";
+		return "Riichi " + correspond_tiles[0]->to_string();
 	case BaseAction::Tsumo:
 		return "Tsumo";
 	case BaseAction::Kyushukyuhai:

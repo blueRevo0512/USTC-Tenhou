@@ -9,6 +9,20 @@
 using namespace std;
 namespace_mahjong
 
+bool Table::check_from_hand(Action action)
+{
+	if (action.action != BaseAction::Discard && action.action != BaseAction::Riichi)
+		return true;
+	bool is_from_hand = DiscardFromHand;
+	if (last_action != BaseAction::Chi &&
+		last_action != BaseAction::Pon) {
+		// tile是不是最后一张
+		if (action.correspond_tiles[0] == players[turn].hand.back())
+			is_from_hand = DiscardFromTsumo;
+	}
+	return is_from_hand;
+}
+
 static bool check_minogashi(const vector<ResponseAction>& responses, int selection)
 {
 	for (int i = 0; i < responses.size();++i) {
@@ -564,22 +578,22 @@ void Table::reshuffle_yama(unsigned int seed)
 	};
 }
 
-string Table::to_string() const
+string Table::to_string(int player) const
 {
 	stringstream ss;
-	ss << "Yama: ";
-	if (yama.size() < 14) {
-		throw runtime_error("Error: Yama has less than 14 tiles.");
-	}
+	// ss << "Yama: ";
+	// if (yama.size() < 14) {
+	// 	throw runtime_error("Error: Yama has less than 14 tiles.");
+	// }
 
-	for (int i = 0; i < 14; ++i) {
-		ss << yama[i]->to_string() << " ";
-	}
-	ss << "(Wanpai)| ";
-	for (int i = 14; i < yama.size(); ++i) {
-		ss << yama[i]->to_string() << " ";
-	}
-	ss << "\n";
+	// for (int i = 0; i < 14; ++i) {
+	// 	ss << yama[i]->to_string() << " ";
+	// }
+	// ss << "(Wanpai)| ";
+	// for (int i = 14; i < yama.size(); ++i) {
+	// 	ss << yama[i]->to_string() << " ";
+	// }
+	// ss << "\n";
 
 	ss << "Dora Indicator(s):";
 	for (int i = 0; i < n_active_dora; ++i) {
@@ -589,7 +603,7 @@ string Table::to_string() const
 	ss << "Remaining tiles: " << get_remain_tile() << "\n";
 	for (int i = 0; i < 4; ++i)
 		ss << "Player " << i << ": " << "\n" 
-		   << players[i].to_string() << "\n";
+		   << players[i].to_string(i == player) << "\n";
 
 	ss << "\n";
 	ss << "Oya player " << oya << "\n";

@@ -27,7 +27,7 @@ string Player::river_to_string() const
 	return river.to_string();
 }
 
-string Player::to_string() const
+string Player::to_string(bool is_self) const
 {
 	std::string str_fuuro;
 	if (call_groups.size() != 0)
@@ -37,25 +37,41 @@ string Player::to_string() const
 			str_fuuro += call_group.to_string();
 			str_fuuro += ' ';
 		}
-		str_fuuro += '\n';
+		str_fuuro += "\n";
 	}
 
-	return fmt::format(
-		"Pt: {}\n"
-		"Wind: {}\n"
-		"Hand: {}\n"
-		"{}"
-		"River: {}\n"
-		"Riichi: {}\n"
-		"Menzen: {}", 
-		score, 
-		wind_to_string(wind), 
-		hand_to_string(), 
-		str_fuuro, 
-		river_to_string(),
-		riichi ? "Yes" : "No", 
-		menzen ? "Yes" : "No"
-	);
+	if (is_self)
+		return fmt::format(
+			"Pt: {}\n"
+			"Wind: {}\n"
+			"Hand: {}\n"
+			"{}"
+			"River: {}\n"
+			"Riichi: {}\n"
+			"Menzen: {}", 
+			score, 
+			wind_to_string(wind), 
+			hand_to_string(), 
+			str_fuuro, 
+			river_to_string(),
+			riichi ? "Yes" : "No", 
+			menzen ? "Yes" : "No"
+		);
+	else
+		return fmt::format(
+			"Pt: {}\n"
+			"Wind: {}\n"
+			"{}"
+			"River: {}\n"
+			"Riichi: {}\n"
+			"Menzen: {}", 
+			score, 
+			wind_to_string(wind), 
+			str_fuuro, 
+			river_to_string(),
+			riichi ? "Yes" : "No", 
+			menzen ? "Yes" : "No"
+		);
 }
 
 string Player::tenpai_to_string() const

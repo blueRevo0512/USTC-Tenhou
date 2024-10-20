@@ -2,7 +2,6 @@ cmake_minimum_required(VERSION 3.1)
 project(mahjong)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/Mahjong
                     ${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty
-                    ${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/pybind11
                     ${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/fmt/include
                     ${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/tenhou
                     ${CMAKE_CURRENT_SOURCE_DIR}
@@ -29,5 +28,4 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/resource/syanten.dat ${CMAKE_CURRENT_
 
 add_subdirectory(ThirdParty EXCLUDE_FROM_ALL)
 add_subdirectory(Mahjong)
-add_subdirectory(Pybinder)
 add_subdirectory(test)
