@@ -160,6 +160,7 @@ public:
 	}
 
 	std::string to_string(int player) const;
+	std::string show_dora(bool is_riichi) const;
 
 	inline bool after_chipon() { return last_action == BaseAction::Chi || last_action == BaseAction::Pon; }
 	inline bool after_daiminkan() {	return last_action == BaseAction::Kan; }

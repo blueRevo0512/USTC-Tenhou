@@ -1,5 +1,8 @@
 cmake_minimum_required(VERSION 3.1)
 project(MahjongTest)
+set(CMAKE_EXE_LINKER_FLAGS "-static")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static-libgcc -static-libstdc++ -static")
+set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
 file(GLOB_RECURSE MahjongSrc ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
 add_executable(${PROJECT_NAME} ${MahjongSrc})
 target_link_libraries(${PROJECT_NAME} MahjongCore fmt tenhou_shuffle Ws2_32)

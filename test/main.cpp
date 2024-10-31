@@ -152,8 +152,8 @@ void start_game()
 {
 	Result result;
 	bool is_first = true;
-	for (int wind = 0; wind < max_wind + (is_first ? 0 : *max_element(result.score.begin(), result.score.end()) < 30000); wind++)
-		for(int oya = 0; oya < max_oya + (max_oya == 1 && *max_element(result.score.begin(), result.score.end()) < 30000 ? 4 : 0); oya++)
+	for (int wind = 0; wind < max_wind + (is_first || max_wind == 4 ? 0 : *max_element(result.score.begin(), result.score.end()) < 30000); wind++)
+		for(int oya = 0; oya < max_oya + (max_oya == 1 && *max_element(result.score.begin(), result.score.end()) < 30000 ? 3 : 0); oya++)
 		{
 			while((wind < max_wind && oya < max_oya) || *max_element(result.score.begin(),result.score.end()) < 30000)
 			{
@@ -168,10 +168,17 @@ void start_game()
 				try
 				{
 					string message[4];
+					int last_player;
+					SelfAction self_action;
+					ResponseAction response_action;
+					bool is_self_action = false;
 					while(!t.is_over())
 					{
 						for(int player = 0; player < 4; player++)
-							message[player] = t.to_string(player) + "\n" + to_string(t.who_make_selection()) + " is making selection.\n";
+							message[player] = (t.get_phase() < 4 ? t.to_string(player) + "\n" + to_string(t.who_make_selection()) + " is making selection.\n" : t.to_string(player) + "\n" + (t.who_make_selection() == player ? "You are making selection.\n" : ""));
+						if((is_self_action && self_action.action != BaseAction::Discard) || (!is_self_action && response_action.action != BaseAction::Pass))
+							for(int player = 0; player < 4; player++)
+								message[player] = message[player] + "Player " + to_string(last_player) + " just " + (is_self_action ? self_action.to_string() : response_action.to_string()) + "!\n";
 						if (t.get_phase() < 4)
 						{
 							message[t.who_make_selection()] += "SelfAction phase.\n";
@@ -212,6 +219,9 @@ void start_game()
 							} catch(const exception& e) {
 								fmt::print("Exception in selection receiver: {}\n",e.what());
 							}
+							last_player = t.who_make_selection();
+							self_action = actions[index_map[selection]];
+							is_self_action = true;
 							t.make_selection(index_map[selection]);
 						}
 						else
@@ -259,11 +269,17 @@ void start_game()
 							} catch(const exception& e) {
 								fmt::print("Exception in selection receiver: {}\n",e.what());
 							}
+							last_player = t.who_make_selection();
+							response_action = actions[index_map[selection]];
+							is_self_action = false;
 							t.make_selection(index_map[selection]);
 						}
 					}
+					bool is_riichi = false;
+					for(auto result: t.get_result().results)
+						is_riichi |= any_of(result.second.yakus.begin(), result.second.yakus.end(),[](const Yaku& yaku) { return yaku == Yaku::Riichi || yaku == Yaku::Dabururiichi; });
 					for(int player = 0; player < 4; player++)
-						message[player] = "Result: \n" + t.get_result().to_string() + "\n" + "Type anything to continue.\n";
+						message[player] = t.show_dora(is_riichi) + "Result: \n" + t.get_result().to_string() + "\n" + "Type anything to continue.\n";
 					for(int player = 0; player < 4; player++)
 						boost::asio::write(*clients[player], boost::asio::buffer(message[player]));
 					for(int player = 0; player < 4; player++)
@@ -319,23 +335,43 @@ void create_room()
 	uniform_int_distribution<> dist(10000, 60000);
 	int port;
 	bool port_available = false;
-	while (!port_available)
+	fmt::print("Would you like to input the port number or use a random one?\n");
+	fmt::print("1. Input the port number.\n");
+	fmt::print("2. Use a random one.\n\n");
+	string port_choice;
+	cin >> port_choice;
+	if (port_choice == "1")
 	{
-		port=dist(gen);
-		fmt::print("Trying to create room on port {}.\n",port);
-		try
+		fmt::print("Please input the port number.\n");
+		cin >> port;
+		thread server_thread([&io_service, port]() {
+			server(io_service, port);
+		});
+		fmt::print("Successfully created room on port {}.\n",port);
+		client(io_service, "127.0.0.1", to_string(port), true);
+		port_available = true;
+		server_thread.join();
+	}
+	else
+	{
+		while (!port_available)
 		{
-			thread server_thread([&io_service, port]() {
-				server(io_service, port);
-			});
-			fmt::print("Successfully created room on port {}.\n",port);
-			client(io_service, "127.0.0.1", to_string(port), true);
-			port_available = true;
-			server_thread.join();
-		}
-		catch(const exception& e)
-		{
-			fmt::print("Port {} is unavailable: {}. Trying another port.\n",port,e.what());
+			port=dist(gen);
+			fmt::print("Trying to create room on port {}.\n",port);
+			try
+			{
+				thread server_thread([&io_service, port]() {
+					server(io_service, port);
+				});
+				fmt::print("Successfully created room on port {}.\n",port);
+				client(io_service, "127.0.0.1", to_string(port), true);
+				port_available = true;
+				server_thread.join();
+			}
+			catch(const exception& e)
+			{
+				fmt::print("Port {} is unavailable: {}. Trying another port.\n",port,e.what());
+			}
 		}
 	}
 	start_game();
@@ -354,9 +390,9 @@ void join_room()
 
 void start_ui()
 {
-	fmt::print("Welcome to USTC Tenhou!\n");
 	while (true)
 	{
+		fmt::print("Welcome to USTC Tenhou!\n");
 		fmt::print("Type 'h' or 'help' to see the rules and instructions of the game.\n");
 		fmt::print("Type 'i' or 'info' to see the information about the project.\n");
 		fmt::print("Type '1' or 'c' or 'create' to create a room for playing.\n");
@@ -409,6 +445,7 @@ void start_ui()
 		{
 			join_room();
 		}
+		system("cls");
 	}
 }
 

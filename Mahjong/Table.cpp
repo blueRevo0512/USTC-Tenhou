@@ -601,14 +601,33 @@ string Table::to_string(int player) const
 	}
 	ss << "\n";
 	ss << "Remaining tiles: " << get_remain_tile() << "\n";
-	for (int i = 0; i < 4; ++i)
-		ss << "Player " << i << ": " << "\n" 
-		   << players[i].to_string(i == player) << "\n";
+	for (int i = 1; i <= 4; ++i)
+		ss << "Player " << (player + i) % 4 << ": " << "\n" 
+		   << players[(player + i) % 4].to_string((player + i) % 4 == player) << "\n";
 
 	ss << "\n";
 	ss << "Oya player " << oya << "\n";
 	ss << "Honba: " << honba << "\n";
 	ss << "Kyoutaku: " << kyoutaku << "\n";
+	return ss.str();
+}
+
+string Table::show_dora(bool is_riichi) const
+{
+	stringstream ss;
+	ss << "Dora Indicator(s):";
+	for (int i = 0; i < n_active_dora; ++i) {
+		ss << dora_indicator[i]->to_string() << " ";
+	}
+	ss << "\n";
+	if (is_riichi)
+	{
+		ss << "Uradora Indicator(s):";
+		for (int i = 0; i < n_active_dora; ++i) {
+			ss << uradora_indicator[i]->to_string() << " ";
+		}
+		ss << "\n";
+	}
 	return ss.str();
 }
 
