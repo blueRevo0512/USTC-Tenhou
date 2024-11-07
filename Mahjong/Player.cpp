@@ -568,17 +568,19 @@ void Player::execute_naki(vector<Tile*> tiles, Tile* tile, int relative_position
 		switch (relative_position) {
 		case 1: // 下家
 		case -3:
+			call_group.tiles = { tiles[0], tiles[1], tile };
 			call_group.take = 2; break;
 		case 2: // 对家
 		case -2:
+			call_group.tiles = { tiles[0], tile, tiles[1] };
 			call_group.take = 1; break;
 		case 3: // 上家
 		case -1:
+			call_group.tiles = { tile, tiles[0], tiles[1] };
 			call_group.take = 0; break;
 		default:
 			throw runtime_error("Bad Position in Fulu (Pon/Kan).");
 		}
-		call_group.tiles = { tiles[0], tiles[1], tile };
 
 		// 加入
 		call_groups.push_back(call_group);
@@ -624,17 +626,19 @@ void Player::execute_naki(vector<Tile*> tiles, Tile* tile, int relative_position
 		switch (relative_position % 4) {
 		case 1: // 下家
 		case -3:
+			call_group.tiles = { tiles[0], tiles[1], tile, tiles[2] };
 			call_group.take = 2; break;
 		case 2: // 对家
 		case -2:
+			call_group.tiles = { tiles[0], tile, tiles[1], tiles[2] };
 			call_group.take = 1; break;
 		case 3: // 上家
 		case -1:
+			call_group.tiles = { tile, tiles[0], tiles[1], tiles[2] };
 			call_group.take = 0; break;
 		default:
 			throw runtime_error("Bad Position in Fulu (Pon/Kan).");
 		}
-		call_group.tiles = { tiles[0], tiles[1], tiles[2], tile };
 
 		// 加入
 		call_groups.push_back(call_group);

@@ -266,7 +266,7 @@ struct CallGroup {
 		case Chi:
 		case Pon:
 		case DaiMinKan:
-			for (int i = 0; i < 3; ++i) {
+			for (int i = 0; i < 3 + (type == DaiMinKan); ++i) {
 				if (i == take) ret += fmt::format("({})", tiles[i]->to_string());
 				else ret += tiles[i]->to_string();
 			}
